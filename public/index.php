@@ -48,7 +48,6 @@ class IndulgenceBot
         $posts = [];
 
         $html = file_get_contents(self::INDULGENCE_URL);
-        file_put_contents('page.txt', $html);
         $pq = phpQuery::newDocument($html);
         $wi_body = $pq->find('.wi_body');
 
