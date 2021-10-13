@@ -48,6 +48,7 @@ class IndulgenceBot
         $posts = [];
 
         $html = file_get_contents(self::INDULGENCE_URL);
+        file_put_contents('page.txt', $html);
         $pq = phpQuery::newDocument($html);
         $wi_body = $pq->find('.wi_body');
 
@@ -59,13 +60,9 @@ class IndulgenceBot
             $pi_text_html = $pi_text->html();
 
             if ($pi_text_html) {
-                if (!substr_count($pi_text_html, '<br>') && !substr_count($pi_text_html, '<img') && substr_count($block->html(), 'class="thumb_map_img') < 2) {
-                    $patterns = [
-                        '/<span.*?>/',
-                        '/<\/span>/',
-                        '/<a.*?<\/a>/',
-                    ];
-                    $posts[] = preg_replace($patterns, '', $pi_text_html);
+                if (!substr_count($pi_text_html, '<img') && substr_count($block->html(), 'class="thumb_map_img') < 2) {
+                    $pi_text_html = str_replace('<br>', "\n", $pi_text_html);
+                    $posts[] = preg_replace(['/<span.*?>/', '/<\/span>/', '/<a.*?<\/a>/'], '', $pi_text_html);
                 }
             } else {
                 $thumb_map_img = $block->find('.thumb_map_img');
@@ -109,6 +106,7 @@ class IndulgenceBot
     private function publicPost(string $post): void
     {
         if (substr_count($post, 'http')) {
+            var_dump(new InputFile($post));
             $this->telegram->sendPhoto([
                 'chat_id' => $_ENV['CHANNEL_ID'],
                 'photo' => new InputFile($post),
@@ -133,7 +131,7 @@ class IndulgenceBot
         $newPosts = array_diff($currentPosts, $oldPosts);
 
         if ($newPosts) {
-            $this->savePosts($newPosts);
+            $this->savePosts($currentPosts);
 
             foreach ($newPosts as $newPost) {
                 $this->publicPost($newPost);
