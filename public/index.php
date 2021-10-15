@@ -66,7 +66,6 @@ class IndulgenceBot
 
             if ($pi_text_html) {
                 if (!substr_count($pi_text_html, '<img') && substr_count($block->html(), 'class="thumb_map_img') < 2) {
-                    $pi_text_html = str_replace('<br>', "\n", $pi_text_html);
                     $posts[] = preg_replace(['/<span.*?>/', '/<\/span>/', '/<a.*?<\/a>/'], '', $pi_text_html);
                 }
             } else {
@@ -148,7 +147,7 @@ class IndulgenceBot
         } else {
             $this->telegram->sendMessage([
                 'chat_id' => $_ENV['CHANNEL_ID'],
-                'text' => $post,
+                'text' => str_replace('<br>', "\n", $post),
             ]);
         }
     }
