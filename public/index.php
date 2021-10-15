@@ -61,6 +61,8 @@ class IndulgenceBot
             $block = pq($block);
             $pi_text = $block->find('.pi_text');
 
+            if (count($block->find('.medias_audio')) > 0) continue;
+
             $pi_text = pq($pi_text);
             $pi_text_html = $pi_text->html();
 
