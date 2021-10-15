@@ -11,7 +11,13 @@ class IndulgenceBot
     /**
      * @var string
      */
-    private const INDULGENCE_URL = 'https://vk.com/indulgencia';
+    private const INDULGENCIA_MAIN_URL = 'https://vk.com/indulgencia';
+
+
+    /**
+     * @var string
+     */
+    private const INDULGENCIA_OTPUSTIT_URL = 'https://vk.com/@indulgencia-otpustit';
 
 
     /**
@@ -43,11 +49,11 @@ class IndulgenceBot
     /**
      * @return array
      */
-    private function parseHtml(): array
+    private function parseIndulgenciaMain(): array
     {
         $posts = [];
 
-        $html = file_get_contents(self::INDULGENCE_URL);
+        $html = file_get_contents(self::INDULGENCIA_MAIN_URL);
         $pq = phpQuery::newDocument($html);
         $wi_body = $pq->find('.wi_body');
 
@@ -79,6 +85,36 @@ class IndulgenceBot
 
 
     /**
+     * @return string
+     */
+    private function parseIndulgenciaOtpustit(): string
+    {
+        $article = $url = '';
+        $i = 1;
+        $hasAticle = true;
+
+        while ($hasAticle) {
+            $url = ($i === 1) ? self::INDULGENCIA_OTPUSTIT_URL : self::INDULGENCIA_OTPUSTIT_URL . $i;
+
+            $getArticle = function () use ($url): string
+            {
+                $html = file_get_contents($url);
+                $pq = phpQuery::newDocument($html);
+                $article = $pq->find('p.article_decoration_first');
+                return $article->html();
+            };
+            
+            ($getArticle() !== '') ? $article = $getArticle() : $hasAticle = false;
+
+            $i++;
+        }
+        
+        return $article;
+    }
+
+
+
+    /**
      * @return array
      */
     private function getPosts(): array
@@ -105,7 +141,6 @@ class IndulgenceBot
     private function publicPost(string $post): void
     {
         if (substr_count($post, 'http')) {
-            var_dump(new InputFile($post));
             $this->telegram->sendPhoto([
                 'chat_id' => $_ENV['CHANNEL_ID'],
                 'photo' => new InputFile($post),
@@ -124,15 +159,18 @@ class IndulgenceBot
      */
     public function run(): void
     {
-        $currentPosts = $this->parseHtml();
+        $indulgenciaPosts = $this->parseIndulgenciaMain();
+        $indulgenciaOtpustitPost = $this->parseIndulgenciaOtpustit();
+
+        $indulgenciaPosts[] = $indulgenciaOtpustitPost;
         $oldPosts = $this->getPosts();
 
-        $newPosts = array_diff($currentPosts, $oldPosts);
+        $newIndulgenciaPosts = array_diff($indulgenciaPosts, $oldPosts);
 
-        if ($newPosts) {
-            $this->savePosts($currentPosts);
+        if ($newIndulgenciaPosts) {
+            $this->savePosts($indulgenciaPosts);
 
-            foreach ($newPosts as $newPost) {
+            foreach ($newIndulgenciaPosts as $newPost) {
                 $this->publicPost($newPost);
             }
         }
