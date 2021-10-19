@@ -59,10 +59,11 @@ class IndulgenceBot
 
         foreach ($wi_body as $block) {
             $block = pq($block);
-            $pi_text = $block->find('.pi_text');
 
             if (count($block->find('.medias_audio')) > 0) continue;
+            if (count($block->find('.mt_dur')) > 0) continue;
 
+            $pi_text = $block->find('.pi_text');
             $pi_text = pq($pi_text);
             $pi_text_html = $pi_text->html();
 
@@ -161,9 +162,9 @@ class IndulgenceBot
     public function run(): void
     {
         $indulgenciaPosts = $this->parseIndulgenciaMain();
-        $indulgenciaOtpustitPost = $this->parseIndulgenciaOtpustit();
+        // $indulgenciaOtpustitPost = $this->parseIndulgenciaOtpustit();
 
-        $indulgenciaPosts[] = $indulgenciaOtpustitPost;
+        // $indulgenciaPosts[] = $indulgenciaOtpustitPost;
         $oldPosts = $this->getPosts();
 
         $newIndulgenciaPosts = array_diff($indulgenciaPosts, $oldPosts);
